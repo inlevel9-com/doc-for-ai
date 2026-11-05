@@ -1,0 +1,3 @@
+include docs/*.md docs/usage.txt
+include docs/screenshots/*.png
+recursive-include scripts *.ps1 *.py *.spec *.txt

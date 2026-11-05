@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docforai"
+version = "0.1.0"
+description = "Offline document conversion to Markdown and structured JSON"
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = [
+  "beautifulsoup4>=4.12,<5",
+  "charset-normalizer>=3,<4",
+  "defusedxml>=0.7,<1",
+  "mammoth>=1.12.2,<2",
+  "markdownify>=1.2,<2",
+  "openpyxl>=3.1.5,<4",
+  "pdfminer.six>=20260107",
+  "python-pptx>=1.0.2,<2",
+  "unhwp==0.23.1",
+  "xlrd>=2.0.2,<3",
+]
+
+[project.optional-dependencies]
+gui = ["tkinterdnd2==0.7.0"]
+build = ["pyinstaller>=6.11", "tkinterdnd2==0.7.0"]
+test = ["pytest", "python-docx"]
+
+[project.scripts]
+docforai = "docforai.cli:main"
+
+[project.gui-scripts]
+docforai-gui = "docforai.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
