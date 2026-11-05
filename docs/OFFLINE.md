@@ -8,6 +8,10 @@
 
 Windows 패키지에 Python, Tcl/Tk, 기본 문서 파서가 포함됩니다. 사용 PC에는 인터넷 연결, Python 설치, API 키가 필요 없습니다. 변환 결과는 기본적으로 원본 옆 `변환결과`에 저장합니다.
 
+## 새 버전 확인 끄기
+
+프로그램은 열릴 때 GitHub 릴리스(`api.github.com`)에 새 버전이 있는지 한 번 묻습니다. 폐쇄망에서는 연결이 안 되어 몇 초 안에 조용히 포기하며 문서 처리에는 영향이 없습니다. 보안 정책상 시도 자체를 막으려면 창 아래쪽 **시작할 때 새 버전 확인** 체크를 해제하세요. 설정 파일은 Windows `%APPDATA%\docforai\settings.json`, Mac `~/Library/Application Support/docforai/settings.json` 이며 `{"check_updates": false}` 로 미리 배포해 둘 수도 있습니다.
+
 ## 구형 문서 변환 도구
 
 DOC, PPT, RTF, ODT, ODP, ODS를 변환하려면 LibreOffice가 필요합니다. Windows에서 이미 설치한 LibreOffice를 사용하거나, 포터블 폴더를 패키지의 `tools/` 아래에 복사할 수 있습니다.

@@ -7,12 +7,15 @@ import subprocess
 import sys
 import threading
 import tkinter as tk
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import APP_NAME, DESIGNED_BY, __version__
 from .engine.hancom import unavailable_reason as hancom_unavailable_reason
 from .paths import asset_path
+from .settings import load_settings, save_settings
+from .update import UpdateInfo, check_latest, download_asset
 from .engine import (
     AUDIO_FORMATS,
     FORMAT_LABEL,
@@ -58,13 +61,15 @@ class App:
                 pass
         self.root.title(f"{APP_NAME} {__version__} | {DESIGNED_BY}")
         self._set_icon()
-        self.root.geometry("760x620")
-        self.root.minsize(640, 520)
+        self.root.geometry("760x740")
+        self.root.minsize(680, 620)
         self.files: list[Path] = []
         self.results: list[ConvertResult] = []
         self.q: queue.Queue = queue.Queue()
         self.worker: threading.Thread | None = None
         self.last_out_dirs: list[Path] = []
+        self.settings = load_settings()
+        self.update_info: UpdateInfo | None = None
 
         self.root.option_add("*Font", (FONT_FAMILY, 11))
         style = ttk.Style()
@@ -77,6 +82,7 @@ class App:
 
         self._build()
         self.root.after(150, self._poll)
+        self.root.after(1200, self._check_update)
 
     def _set_icon(self) -> None:
         """창과 작업 표시줄에 서비스 아이콘을 표시한다. 아이콘이 없어도 실행은 계속된다."""
@@ -153,7 +159,7 @@ class App:
         self.progress.pack(side="left", fill="x", expand=True, padx=8)
 
         cols = ("file", "kind", "status")
-        self.tree = ttk.Treeview(self.root, columns=cols, show="headings", height=10)
+        self.tree = ttk.Treeview(self.root, columns=cols, show="headings", height=6)
         self.tree.heading("file", text="문서")
         self.tree.heading("kind", text="종류")
         self.tree.heading("status", text="상태")
@@ -166,8 +172,69 @@ class App:
         self.tree.tag_configure("warn", foreground="#b45309")
         self.tree.bind("<Double-1>", self._show_detail)
 
-        self.status = ttk.Label(self.root, text="준비됨 · 인터넷 연결 없이 이 PC 안에서만 처리합니다", anchor="w", foreground="#475569")
-        self.status.pack(fill="x", padx=14, pady=(0, 8))
+        # 새 버전 알림 띠. 평소에는 숨겨 두고 새 버전이 확인되면 목록 위에 나타난다.
+        self.update_bar = tk.Frame(self.root, bg="#fef3c7", bd=1, relief="solid")
+        self.update_label = tk.Label(self.update_bar, text="", bg="#fef3c7", fg="#92400e", anchor="w", font=(FONT_FAMILY, 11))
+        self.update_label.pack(side="left", padx=10, pady=6, fill="x", expand=True)
+        ttk.Button(self.update_bar, text="나중에", command=self.update_bar.pack_forget).pack(side="right", padx=(0, 8))
+        self.btn_update = ttk.Button(self.update_bar, text="내려받기", command=self._download_update)
+        self.btn_update.pack(side="right", padx=4)
+
+        bottom = ttk.Frame(self.root)
+        bottom.pack(fill="x", padx=14, pady=(0, 8))
+        self.status = ttk.Label(bottom, text="준비됨 · 문서는 이 PC 안에서만 처리합니다", anchor="w", foreground="#475569")
+        self.status.pack(side="left", fill="x", expand=True)
+        self.v_check_updates = tk.BooleanVar(value=bool(self.settings.get("check_updates", True)))
+        ttk.Checkbutton(bottom, text="시작할 때 새 버전 확인", variable=self.v_check_updates, command=self._toggle_update_check).pack(side="right")
+
+    # ---------- 새 버전 확인 ----------
+    def _toggle_update_check(self) -> None:
+        self.settings["check_updates"] = self.v_check_updates.get()
+        save_settings(self.settings)
+
+    def _check_update(self) -> None:
+        """인터넷이 되면 GitHub 릴리스에서 새 버전을 확인한다. 안 되면 아무 일도 하지 않는다."""
+        if not self.v_check_updates.get():
+            return
+
+        def work() -> None:
+            info = check_latest()
+            if info:
+                self.q.put(("update", info, None))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _show_update(self, info: UpdateInfo) -> None:
+        self.update_info = info
+        self.update_label.config(text=f"새 버전 {info.version}이 나왔습니다 (지금 {__version__}). 내려받기를 누르면 내려받기 폴더에 저장합니다.")
+        self.btn_update.config(state="normal", text="내려받기" if info.asset_url else "릴리스 페이지 열기")
+        self.update_bar.pack(fill="x", padx=14, pady=(0, 4), before=self.tree)
+
+    def _download_update(self) -> None:
+        info = self.update_info
+        if info is None:
+            return
+        if not info.asset_url:
+            webbrowser.open(info.page_url)
+            return
+        self.btn_update.config(state="disabled", text="내려받는 중…")
+
+        def work() -> None:
+            try:
+                path = download_asset(info, progress=lambda done, total: self.q.put(("update_progress", done, total)))
+                self.q.put(("update_done", path, None))
+            except Exception as e:  # noqa: BLE001
+                self.q.put(("update_error", str(e)[:200], None))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _update_downloaded(self, path: Path) -> None:
+        self.update_bar.pack_forget()
+        self.status.config(text=f"새 버전을 내려받았습니다: {path.name}")
+        if messagebox.askyesno("새 버전 내려받기 완료",
+                               f"{path.name} 을(를) 내려받기 폴더에 저장했습니다.\n\n"
+                               "이 프로그램을 닫고 ZIP 을 푼 뒤 새 폴더의 프로그램을 여세요. 폴더를 열까요?"):
+            self._open_folder(path.parent)
 
     # ---------- 파일 담기 ----------
     def _on_drop(self, event) -> None:  # noqa: ANN001
@@ -264,6 +331,16 @@ class App:
                 i, n, r = self.q.get_nowait()
                 if i == "done":
                     self._finish()
+                elif i == "update":
+                    self._show_update(n)
+                elif i == "update_progress":
+                    pct = f" {n * 100 // r}%" if r else ""
+                    self.btn_update.config(text=f"내려받는 중…{pct}")
+                elif i == "update_done":
+                    self._update_downloaded(n)
+                elif i == "update_error":
+                    self.btn_update.config(state="normal", text="내려받기")
+                    messagebox.showerror("새 버전 내려받기", f"내려받지 못했습니다.\n{n}\n\n릴리스 페이지에서 직접 받을 수 있습니다.")
                 else:
                     self._update_row(i - 1, r)
                     self.progress["value"] = i
@@ -347,9 +424,10 @@ class App:
         messagebox.showinfo("자세히", body)
 
     def _open_out(self) -> None:
-        if not self.last_out_dirs:
-            return
-        d = self.last_out_dirs[0]
+        if self.last_out_dirs:
+            self._open_folder(self.last_out_dirs[0])
+
+    def _open_folder(self, d: Path) -> None:
         try:
             if sys.platform == "win32":
                 os.startfile(str(d))  # type: ignore[attr-defined]
