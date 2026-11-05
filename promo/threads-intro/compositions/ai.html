@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Pretendard"; font-weight: 400; src: url("assets/fonts/Pretendard-Regular.woff2") format("woff2"); }
+        @font-face { font-family: "Pretendard"; font-weight: 700; src: url("assets/fonts/Pretendard-Bold.woff2") format("woff2"); }
+        #root { position: absolute; inset: 0; font-family: "Pretendard", sans-serif; color: #e5e7eb; }
+        #ai-win { position: absolute; left: 70px; top: 150px; width: 940px; height: 860px; background: #171a21; border-radius: 14px; border: 1px solid #2a2f3a;
+                  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); overflow: hidden; display: flex; flex-direction: column; }
+        .titlebar { height: 56px; display: flex; align-items: center; padding: 0 20px; background: #1f232c; border-bottom: 1px solid #2a2f3a; gap: 12px; }
+        .titlebar .t { font-size: 18px; font-weight: 700; }
+        .titlebar .s { font-size: 14px; color: #9ca3af; }
+        .titlebar .controls { margin-left: auto; display: flex; gap: 26px; color: #9ca3af; font-size: 15px; }
+        .thread { flex: 1; padding: 26px 26px 20px; display: flex; flex-direction: column; gap: 18px; }
+        .msg { max-width: 640px; border-radius: 18px; padding: 16px 20px; font-size: 20px; line-height: 1.45; }
+        #ai-user { align-self: flex-end; background: #c4f87a; color: #0b1220; border-bottom-right-radius: 6px; opacity: 0; }
+        .attach { display: inline-flex; align-items: center; gap: 8px; background: rgba(11, 18, 32, 0.12); border-radius: 10px; padding: 6px 12px; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .attach .doc { width: 16px; height: 20px; border: 2px solid #0b1220; border-radius: 3px; }
+        #ai-typing { align-self: flex-start; display: flex; gap: 6px; padding: 14px 18px; background: #262b36; border-radius: 18px; border-bottom-left-radius: 6px; opacity: 0; }
+        #ai-typing i { width: 10px; height: 10px; border-radius: 50%; background: #9ca3af; display: block; }
+        #ai-bot { align-self: flex-start; background: #262b36; border-bottom-left-radius: 6px; width: 640px; opacity: 0; }
+        .xlsx { margin-top: 14px; background: #ffffff; border-radius: 10px; overflow: hidden; color: #111827; }
+        .xlsx .bar { height: 40px; background: #107c41; color: #fff; display: flex; align-items: center; padding: 0 14px; font-size: 16px; font-weight: 700; gap: 10px; }
+        .xlsx .bar .x { width: 22px; height: 22px; border-radius: 4px; background: #fff; color: #107c41; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: 40px 1fr 1fr 1fr 1fr; font-size: 14px; }
+        .grid span { height: 30px; display: flex; align-items: center; padding: 0 8px; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; }
+        .grid .h { background: #f3f4f6; font-weight: 700; justify-content: center; color: #374151; }
+        .grid .r { color: #6b7280; justify-content: center; background: #f9fafb; }
+        .grid .v { opacity: 0; }
+        .grid .num { justify-content: flex-end; }
+        .tabs { display: flex; gap: 2px; padding: 6px 8px; background: #f3f4f6; border-top: 1px solid #e5e7eb; }
+        .tab { padding: 4px 12px; font-size: 13px; background: #fff; border: 1px solid #d1d5db; border-bottom: none; border-radius: 4px 4px 0 0; opacity: 0; }
+        .tab.on { background: #fff; color: #107c41; font-weight: 700; border-bottom: 2px solid #107c41; }
+      </style>
+      <div id="root" data-composition-id="ai" data-width="1080" data-height="1350">
+        <div id="ai-win">
+          <div class="titlebar"><span class="t">내가 쓰는 AI</span><span class="s">ChatGPT · Claude · 로컬 모델, 어디든</span><div class="controls"><span>─</span><span>☐</span><span>✕</span></div></div>
+          <div class="thread">
+            <div class="msg" id="ai-user"><div class="attach"><span class="doc"></span>예산편성안.json</div><div>이 JSON을 부서별 시트로 나눠서 엑셀로 만들어 줘. 금액은 합계 행도 넣어 줘.</div></div>
+            <div id="ai-typing"><i></i><i></i><i></i></div>
+            <div class="msg" id="ai-bot"><div>예산편성안.xlsx 를 만들었습니다. 부서별 시트 3개와 정보 시트, 합계 행을 넣었습니다.</div>
+              <div class="xlsx"><div class="bar"><span class="x">X</span>예산편성안.xlsx</div>
+                <div class="grid" id="ai-grid">
+                  <span class="h"></span><span class="h">A</span><span class="h">B</span><span class="h">C</span><span class="h">D</span>
+                  <span class="r">1</span><span class="v">부서</span><span class="v">항목</span><span class="v num">금액</span><span class="v">비고</span>
+                  <span class="r">2</span><span class="v">총무과</span><span class="v">사무용품</span><span class="v num">120,000</span><span class="v">1분기</span>
+                  <span class="r">3</span><span class="v">총무과</span><span class="v">회의비</span><span class="v num">340,000</span><span class="v">주민설명회</span>
+                  <span class="r">4</span><span class="v">총무과</span><span class="v">인쇄비</span><span class="v num">85,000</span><span class="v">보도자료</span>
+                  <span class="r">5</span><span class="v" style="font-weight:700">합계</span><span class="v"></span><span class="v num" style="font-weight:700">545,000</span><span class="v"></span>
+                </div>
+                <div class="tabs"><span class="tab">정보</span><span class="tab on">총무과</span><span class="tab">기획과</span><span class="tab">복지과</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#ai-win", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0);
+        tl.fromTo("#ai-user", { opacity: 0, scale: 0.9, transformOrigin: "100% 100%" }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.4)" }, 0.35);
+        tl.fromTo("#ai-typing", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.9);
+        tl.fromTo("#ai-typing i", { y: 0 }, { y: -6, duration: 0.18, ease: "power1.inOut", yoyo: true, repeat: 3, stagger: 0.08 }, 0.95);
+        tl.to("#ai-typing", { opacity: 0, duration: 0.15 }, 1.75);
+        tl.fromTo("#ai-bot", { opacity: 0, scale: 0.9, transformOrigin: "0% 0%" }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.3)" }, 1.8);
+        tl.fromTo("#ai-grid .v", { opacity: 0 }, { opacity: 1, duration: 0.12, stagger: 0.045 }, 2.2);
+        tl.fromTo(".tabs .tab", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.2, ease: "power3.out", stagger: 0.1 }, 2.4);
+        window.__timelines["ai"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

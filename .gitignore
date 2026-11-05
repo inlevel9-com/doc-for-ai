@@ -12,3 +12,9 @@ __pycache__/
 .coverage
 .env
 .env.*
+
+# HyperFrames promo projects
+promo/*/node_modules/
+promo/*/.hyperframes/
+promo/*/out/
+promo/*/*.mp4

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Pretendard"; font-weight: 400; src: url("assets/fonts/Pretendard-Regular.woff2") format("woff2"); }
+        @font-face { font-family: "Pretendard"; font-weight: 700; src: url("assets/fonts/Pretendard-Bold.woff2") format("woff2"); }
+        @font-face { font-family: "Pretendard"; font-weight: 800; src: url("assets/fonts/Pretendard-ExtraBold.woff2") format("woff2"); }
+        #root { position: absolute; inset: 0; font-family: "Pretendard", sans-serif; color: #ffffff; display: flex; align-items: center; justify-content: center; }
+        #end-col { display: flex; flex-direction: column; align-items: center; gap: 26px; width: 860px; }
+        #end-icon { width: 240px; height: 240px; position: relative; }
+        #end-icon img { position: absolute; inset: 0; width: 240px; height: 240px; }
+        #end-icon .grey { position: absolute; inset: 0; background: url("assets/icon.png") center / 240px 240px no-repeat; filter: grayscale(1) brightness(0.55); }
+        #end-icon .wrap { position: absolute; inset: 0; overflow: hidden; }
+        #end-title { font-size: 88px; font-weight: 800; letter-spacing: -0.02em; display: flex; gap: 22px; line-height: 1.1; }
+        #end-title span { display: inline-block; opacity: 0; }
+        #end-by { font-size: 30px; font-weight: 700; color: #c4f87a; letter-spacing: 0.08em; opacity: 0; }
+        #end-pills { display: flex; gap: 14px; margin-top: 8px; }
+        .pill { padding: 12px 22px; border-radius: 999px; border: 2px solid rgba(255, 255, 255, 0.35); font-size: 28px; font-weight: 700; opacity: 0; }
+        #end-cta { margin-top: 18px; font-size: 28px; color: #cbd5e1; opacity: 0; display: flex; align-items: center; gap: 12px; }
+        #end-cta b { color: #ffffff; font-weight: 800; }
+      </style>
+      <div id="root" data-composition-id="end" data-width="1080" data-height="1350">
+        <div id="end-col">
+          <div id="end-icon"><div class="grey"></div><div class="wrap" id="end-wrap"><img src="assets/icon.png" alt="" /></div></div>
+          <div id="end-title"><span>AI</span><span>문서</span><span>변환기</span></div>
+          <div id="end-by">Designed by INLEVEL9</div>
+          <div id="end-pills"><span class="pill">설치 없음</span><span class="pill">인터넷 없이 동작</span><span class="pill">무료</span></div>
+          <div id="end-cta"><b>Windows용 ZIP 내려받기</b><span>github.com/inlevel9-com/doc-for-ai</span></div>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#end-icon", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" }, 0);
+        // 연두 채움이 아래에서 위로 차오른다
+        tl.fromTo("#end-wrap", { clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0% 0 0 0)", duration: 0.55, ease: "power2.inOut" }, 0.35);
+        tl.fromTo("#end-title span", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out", stagger: 0.09 }, 0.6);
+        tl.fromTo("#end-by", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "expo.out" }, 0.95);
+        tl.fromTo(".pill", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.08 }, 1.05);
+        tl.fromTo("#end-cta", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.3);
+        window.__timelines["end"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Pretendard"; font-weight: 400; src: url("assets/fonts/Pretendard-Regular.woff2") format("woff2"); }
+        @font-face { font-family: "Pretendard"; font-weight: 700; src: url("assets/fonts/Pretendard-Bold.woff2") format("woff2"); }
+        #root { position: absolute; inset: 0; font-family: "Pretendard", sans-serif; color: #111827; }
+        #ap-zoom { position: absolute; inset: 0; }
+        #ap-win { position: absolute; left: 70px; top: 150px; width: 940px; height: 860px; background: #f3f3f3; border-radius: 14px;
+                  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); overflow: hidden; display: flex; flex-direction: column; font-size: 16px; }
+        .titlebar { height: 48px; display: flex; align-items: center; padding: 0 14px; background: #ffffff; border-bottom: 1px solid #e5e7eb; gap: 10px; font-size: 15px; flex: none; }
+        .titlebar img { width: 24px; height: 24px; }
+        .titlebar .controls { margin-left: auto; display: flex; gap: 26px; color: #4b5563; }
+        .body { padding: 10px 16px 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
+        .step { font-weight: 700; font-size: 16px; }
+        #ap-drop { height: 92px; background: #eef2ff; border: 2px groove #c7cbe0; display: flex; align-items: center; justify-content: center; text-align: center;
+                   color: #334155; font-size: 16px; line-height: 1.5; position: relative; overflow: hidden; }
+        #ap-ripple { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; background: rgba(196, 248, 122, 0.55); opacity: 0; }
+        .btnrow { display: flex; align-items: center; gap: 8px; height: 34px; }
+        .btn { height: 30px; padding: 0 14px; border: 1px solid #b9bcc4; border-radius: 4px; background: #fdfdfd; display: inline-flex; align-items: center; font-size: 14px; }
+        .btn.disabled { color: #6b7280; }
+        .count { margin-left: auto; font-size: 15px; position: relative; width: 150px; height: 22px; text-align: right; }
+        .count span { position: absolute; right: 0; top: 0; }
+        .frame { border: 1px solid #d6d8de; border-radius: 4px; padding: 6px 10px 8px; background: #f7f7f8; position: relative; }
+        .frame .legend { position: absolute; top: -9px; left: 10px; background: #f7f7f8; padding: 0 4px; font-size: 12px; color: #374151; }
+        .opt { display: flex; align-items: center; gap: 8px; height: 26px; font-size: 15px; border-radius: 4px; padding: 0 4px; }
+        .box { width: 16px; height: 16px; border: 1px solid #6b7280; border-radius: 3px; background: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+        .radio { width: 16px; height: 16px; border: 1px solid #6b7280; border-radius: 50%; background: #fff; display: inline-flex; align-items: center; justify-content: center; }
+        .radio.on::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #2563eb; }
+        .entry { flex: 1; height: 26px; border: 1px solid #b9bcc4; background: #fff; border-radius: 3px; }
+        #ap-hwpx { position: relative; }
+        #ap-hwpx-glow { position: absolute; inset: -3px -6px; border-radius: 8px; border: 3px solid #c4f87a; background: rgba(196, 248, 122, 0.22); opacity: 0; }
+        #ap-chips { position: absolute; right: 8px; top: 2px; display: flex; gap: 5px; }
+        .chip { height: 22px; padding: 0 8px; border-radius: 11px; background: #111827; color: #c4f87a; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; opacity: 0; }
+        .actrow { display: flex; align-items: center; gap: 10px; height: 56px; }
+        #ap-go { height: 50px; padding: 0 18px; border: 1px solid #9ca3af; border-radius: 4px; background: #fdfdfd; font-size: 22px; font-weight: 700; display: inline-flex; align-items: center; position: relative; width: 160px; justify-content: center; }
+        #ap-go span { position: absolute; }
+        #ap-go .busy { color: #9ca3af; opacity: 0; }
+        .progress { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        #ap-bar { width: 100%; height: 100%; background: #2563eb; transform-origin: left center; }
+        .table { flex: 1; min-height: 0; background: #fff; border: 1px solid #d6d8de; display: flex; flex-direction: column; }
+        .thead { display: grid; grid-template-columns: 1fr 150px 300px; padding: 5px 10px; font-size: 13px; color: #374151; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; text-align: center; }
+        .trow { display: grid; grid-template-columns: 1fr 150px 300px; align-items: center; padding: 0 10px; height: 27px; font-size: 17px; }
+        .trow .kind { text-align: center; }
+        .trow .st { position: relative; height: 27px; }
+        .trow .st span { position: absolute; left: 0; top: 0; line-height: 27px; }
+        .trow .ok { color: #15803d; opacity: 0; }
+        .trow.done .fname, .trow.done .kind { color: #15803d; }
+        .statusbar { height: 30px; display: flex; align-items: center; font-size: 14px; color: #475569; position: relative; }
+        .statusbar span { position: absolute; left: 0; }
+        #ap-done { opacity: 0; }
+        .statusbar .chk { position: absolute; right: 0; display: flex; align-items: center; gap: 6px; }
+        #ap-chip { position: absolute; left: 440px; top: 130px; width: 230px; height: 86px; border-radius: 14px; background: #ffffff; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+                   display: flex; align-items: center; gap: 14px; padding: 0 18px; font-size: 24px; font-weight: 700; opacity: 0; }
+        .folder { width: 44px; height: 36px; position: relative; }
+        .folder::before { content: ""; position: absolute; left: 0; top: 0; width: 18px; height: 10px; background: #f2b84b; border-radius: 2px 2px 0 0; }
+        .folder::after { content: ""; position: absolute; left: 0; top: 7px; width: 44px; height: 29px; background: #f8c96a; border-radius: 2px; }
+        #ap-cursor { position: absolute; left: 0; top: 0; width: 70px; height: 70px; opacity: 0; }
+        #ap-result { position: absolute; left: 200px; top: 400px; width: 680px; background: #ffffff; border-radius: 14px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+                     overflow: hidden; opacity: 0; font-size: 22px; }
+        #ap-result .titlebar { height: 52px; font-size: 18px; }
+        #ap-result .rfolder { width: 26px; height: 22px; position: relative; }
+        #ap-result .rfolder::before { content: ""; position: absolute; left: 0; top: 0; width: 11px; height: 7px; background: #f2b84b; border-radius: 2px 2px 0 0; }
+        #ap-result .rfolder::after { content: ""; position: absolute; left: 0; top: 5px; width: 26px; height: 17px; background: #f8c96a; border-radius: 2px; }
+        .rrow { display: flex; align-items: center; gap: 16px; height: 64px; padding: 0 22px; font-weight: 700; opacity: 0; border-bottom: 1px solid #f1f2f4; }
+        .rrow .rfolder { width: 44px; height: 36px; flex: none; }
+        .rrow .rb { width: 44px; height: 52px; border-radius: 6px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; }
+        .rb.md { background: #eef2ff; border: 1px solid #c7d2fe; color: #1d4ed8; }
+        .rb.json { background: #fef3c7; border: 1px solid #fde68a; color: #b45309; }
+        .rb.hwpx { background: #e8eefc; border: 1px solid #c7d2fe; color: #1d4ed8; }
+        .rrow.hi { background: #f3ffe0; }
+        .rrow.hi .tag { margin-left: auto; font-size: 16px; color: #0b1220; background: #c4f87a; border-radius: 999px; padding: 4px 12px; }
+      </style>
+      <div id="root" data-composition-id="app" data-width="1080" data-height="1350">
+        <div id="ap-zoom">
+          <div id="ap-win">
+            <div class="titlebar"><img src="assets/icon.png" alt="" /><span>AI 문서 변환기 1.1.0 | Designed by INLEVEL9</span><div class="controls"><span>─</span><span>☐</span><span>✕</span></div></div>
+            <div class="body">
+              <div class="step">① 문서를 아래 상자에 끌어다 놓거나 버튼으로 고르세요</div>
+              <div id="ap-drop"><div id="ap-ripple"></div><div data-layout-allow-overlap="true">여기에 파일이나 폴더를 끌어다 놓으세요<br />(한글 HWP·HWPX, 워드, 파워포인트, 엑셀, PDF, 텍스트·웹·전자책, ZIP, 그림·소리 정보)</div></div>
+              <div class="btnrow"><span class="btn">파일 선택…</span><span class="btn">폴더 선택…</span><span class="btn">목록 비우기</span>
+                <div class="count"><span id="ap-count0">선택된 문서: 0개</span><span id="ap-count12" style="opacity:0">선택된 문서: 12개</span></div></div>
+              <div class="frame" data-layout-allow-overlap="true"><div class="legend">② 어떻게 바꿀까요?</div>
+                <div class="opt"><span class="box">✓</span>Markdown (.md) — 사람이 읽기 좋고 AI 에 바로 넣기 좋음</div>
+                <div class="opt"><span class="box">✓</span>JSON (.json) — 표·문단·메타데이터가 구조화된 학습용</div>
+                <div class="opt"><span class="box">✓</span>문서 안의 그림도 함께 저장</div>
+                <div class="opt" id="ap-hwpx"><div id="ap-hwpx-glow"></div><span class="box">✓</span>한글 .hwp 를 .hwpx 로도 저장 (한컴오피스 한글이 설치된 Windows PC)
+</div>
+                <div class="opt" style="margin-top:4px"><span class="radio on"></span>원본 파일 옆 '변환결과' 폴더에 저장 (권장)</div>
+                <div class="opt"><span class="radio"></span>다른 폴더에 저장:<span class="entry"></span><span class="btn" style="height:26px">찾아보기…</span></div>
+              </div>
+              <div class="actrow"><div id="ap-go"><span class="idle">③ 변환 시작</span><span class="busy">변환 중…</span></div>
+                <span class="btn disabled" id="ap-open">결과 폴더 열기</span><span class="btn">JSON → 엑셀로 되돌리기…</span>
+                <div class="progress"><div id="ap-bar"></div></div></div>
+              <div class="table"><div class="thead"><span>문서</span><span>종류</span><span>상태</span></div>
+                <div id="ap-rows">
+                  <div class="trow"><span class="fname">2026년 업무계획.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 2,184자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">회의록_3월.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 1,062자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">예산편성안.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 4,510자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">공문_시행.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 612자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">주민설명회 자료.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 3,295자 · 그림 4장</span></div></div>
+                  <div class="trow"><span class="fname">보도자료.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 980자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">사업계획서.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 7,318자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">정산보고.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 2,740자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">회의록_4월.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 1,155자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">조례개정안.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 3,870자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">민원답변.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 430자 · hwpx 저장</span></div></div>
+                  <div class="trow"><span class="fname">교육자료.hwp</span><span class="kind">한글 문서</span><div class="st"><span class="wait">대기</span><span class="ok">✔ 완료 · 글자 5,602자 · 그림 9장</span></div></div>
+                </div>
+              </div>
+              <div class="statusbar"><span id="ap-ready">준비됨 · 문서는 이 PC 안에서만 처리합니다</span><span id="ap-done">끝났습니다. 성공 12개</span>
+                <div class="chk"><span class="box">✓</span>시작할 때 새 버전 확인</div></div>
+            </div>
+          </div>
+        </div>
+        <div id="ap-chip" data-layout-allow-occlusion><div class="folder"></div>자료실</div>
+        <div id="ap-result" data-layout-allow-occlusion="true" data-layout-allow-overlap="true">
+          <div class="titlebar"><div class="rfolder"></div><span>변환결과</span><div class="controls"><span>─</span><span>☐</span><span>✕</span></div></div>
+          <div class="rrow"><div class="rb md">MD</div>2026년 업무계획.md</div>
+          <div class="rrow"><div class="rb json">JSON</div>2026년 업무계획.json</div>
+          <div class="rrow hi"><div class="rb hwpx">HWPX</div>2026년 업무계획.hwpx<span class="tag">서식 그대로</span></div>
+          <div class="rrow"><div class="rfolder"></div>2026년 업무계획_files</div>
+        </div>
+        <svg id="ap-cursor" viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L16.5 21l-3 1.2-3.6-7.4L5 19z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // 창은 흐릿하게 들어와 선명해진다(앞 장면은 흐려지며 나감)
+        tl.fromTo("#ap-win", { opacity: 0, filter: "blur(12px)", scale: 1.03 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.5, ease: "power3.out" }, 0);
+        // 폴더 칩이 위에서 떨어져 드롭존에 착지하고, 물결이 퍼지며 사라진다
+        tl.set("#ap-chip", { opacity: 1, y: 100, scale: 1 }, 0);
+        tl.to("#ap-chip", { opacity: 0, scale: 0.5, duration: 0.25, ease: "power3.in" }, 0.55);
+        tl.fromTo("#ap-ripple", { opacity: 0.9, scale: 0.2 }, { opacity: 0, scale: 30, duration: 0.7, ease: "power2.out" }, 0.6);
+        // 목록이 '대기'로 차오른다
+        tl.fromTo("#ap-rows .trow", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.25, ease: "power3.out", stagger: 0.06 }, 1.0);
+        tl.fromTo("#ap-count0", { opacity: 1 }, { opacity: 0, duration: 0.12 }, 1.0);
+        tl.fromTo("#ap-count12", { opacity: 0 }, { opacity: 1, duration: 0.12 }, 1.05);
+        // 커서가 들어와 ③ 변환 시작을 누른다
+        tl.set("#ap-cursor", { x: 560, y: 330, opacity: 1 }, 0);
+        tl.to("#ap-cursor", { x: 200, y: 700, duration: 0.6, ease: "power3.inOut" }, 2.0);
+        tl.fromTo("#ap-go", { scale: 1 }, { scale: 0.95, duration: 0.06, ease: "power2.in" }, 2.8);
+        tl.to("#ap-go", { scale: 1, duration: 0.1, ease: "power2.out" }, 2.86);
+        tl.fromTo("#ap-go .idle", { opacity: 1 }, { opacity: 0, duration: 0.1 }, 2.9);
+        tl.fromTo("#ap-go .busy", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 2.95);
+        tl.to("#ap-cursor", { x: 760, y: 980, duration: 0.5, ease: "power2.inOut" }, 3.0);
+        // 진행 막대와 초록 완료 표시
+        tl.fromTo("#ap-bar", { scaleX: 0 }, { scaleX: 1, duration: 3.2, ease: "none" }, 3.0);
+        tl.fromTo("#ap-rows .trow .wait", { opacity: 1 }, { opacity: 0, duration: 0.12, stagger: 0.25 }, 3.1);
+        tl.fromTo("#ap-rows .trow .ok", { opacity: 0, x: 10 }, { opacity: 1, x: 0, duration: 0.2, ease: "power3.out", stagger: 0.25 }, 3.1);
+        tl.fromTo("#ap-rows .trow .fname, #ap-rows .trow .kind", { color: "#111827" }, { color: "#15803d", duration: 0.2, stagger: { each: 0.25, from: 0 } }, 3.1);
+        tl.to("#ap-go .busy", { opacity: 0, duration: 0.1 }, 6.2);
+        tl.to("#ap-go .idle", { opacity: 1, duration: 0.1 }, 6.25);
+        tl.fromTo("#ap-ready", { opacity: 1 }, { opacity: 0, duration: 0.12 }, 6.2);
+        tl.fromTo("#ap-done", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 6.25);
+        tl.fromTo("#ap-open", { color: "#6b7280" }, { color: "#111827", duration: 0.2 }, 6.25);
+        tl.to("#ap-cursor", { opacity: 0, duration: 0.2 }, 6.3);
+        // hwpx 체크 항목이 빛난 뒤, 창이 흐려지고 '변환결과' 폴더 카드가 떠서 .md .json .hwpx 를 보여 준다
+        tl.fromTo("#ap-hwpx-glow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, 6.25);
+        tl.to("#ap-win", { filter: "blur(7px)", scale: 0.985, duration: 0.45, ease: "power2.inOut" }, 6.5);
+        tl.fromTo("#ap-result", { opacity: 0, scale: 0.86, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.45, ease: "back.out(1.3)" }, 6.55);
+        tl.fromTo("#ap-result .rrow", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.28, ease: "power3.out", stagger: 0.12 }, 6.75);
+        window.__timelines["app"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

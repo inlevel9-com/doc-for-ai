@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Pretendard"; font-weight: 800; src: url("assets/fonts/Pretendard-ExtraBold.woff2") format("woff2"); }
+        #root { position: absolute; inset: 0; font-family: "Pretendard", sans-serif; }
+        .cap { position: absolute; left: 60px; right: 60px; top: 1040px; height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+               gap: 6px; color: #ffffff; font-size: 60px; font-weight: 800; line-height: 1.25; text-align: center; letter-spacing: -0.01em;
+               text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); }
+        .cap .line { display: flex; gap: 0.28em; white-space: nowrap; padding: 2px 22px; border-radius: 16px; background: rgba(11, 18, 32, 0.78); }
+        .cap .w { display: inline-block; opacity: 0; }
+        .cap .acc { color: #c4f87a; }
+      </style>
+      <div id="root" data-composition-id="captions" data-width="1080" data-height="1350">
+        <div id="cap1" class="cap clip" data-layout-allow-occlusion data-start="0" data-duration="3.4" data-track-index="0">
+          <div class="line"><span class="w">PC에</span><span class="w">쌓인</span><span class="w">hwp,</span></div>
+          <div class="line"><span class="w">아직도</span><span class="w acc">하나씩</span><span class="w">여세요?</span></div>
+        </div>
+        <div id="cap2" class="cap clip" data-layout-allow-occlusion data-start="4.6" data-duration="2.3" data-track-index="0">
+          <div class="line"><span class="w acc">폴더째</span><span class="w">끌어다</span><span class="w">놓고</span></div>
+        </div>
+        <div id="cap3" class="cap clip" data-layout-allow-occlusion data-start="7.1" data-duration="3.3" data-track-index="0">
+          <div class="line"><span class="w acc">한꺼번에</span></div>
+          <div class="line"><span class="w">Markdown·JSON으로</span></div>
+        </div>
+        <div id="cap4" class="cap clip" data-layout-allow-occlusion data-start="10.5" data-duration="2.2" data-track-index="0">
+          <div class="line"><span class="w acc">hwpx로도</span><span class="w">다시</span><span class="w">저장</span></div>
+        </div>
+        <div id="cap5" class="cap clip" data-layout-allow-occlusion data-start="13.2" data-duration="4.4" data-track-index="0">
+          <div class="line"><span class="w">JSON은</span><span class="w">내가</span><span class="w">쓰는</span><span class="w">AI에게,</span></div>
+          <div class="line"><span class="w">의도대로</span><span class="w acc">엑셀로</span></div>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const caps = [["#cap1", 0, 3.4], ["#cap2", 4.6, 2.3], ["#cap3", 7.1, 3.3], ["#cap4", 10.5, 2.2], ["#cap5", 13.2, 4.4]];
+        for (const [id, start, dur] of caps) {
+          const words = `${id} .w`;
+          const lines = `${id} .line`;
+          if (start === 0) {
+            // 첫 자막은 썸네일(0초)에 이미 떠 있어야 한다
+            tl.set(words, { opacity: 1, filter: "blur(0px)" }, 0);
+            tl.set(lines, { opacity: 1 }, 0);
+          } else {
+            tl.fromTo(lines, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power2.out" }, start + 0.02);
+            tl.fromTo(words, { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.13, ease: "power3.out", stagger: 0.07 }, start + 0.05);
+          }
+          tl.to(words, { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in", stagger: 0.02 }, start + dur - 0.24);
+          tl.to(lines, { opacity: 0, duration: 0.16, ease: "power2.in" }, start + dur - 0.17);
+        }
+        window.__timelines["captions"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

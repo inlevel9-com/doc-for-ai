@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1350" />
+    <title>AI 문서 변환기 — 스레드 소개 영상</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1350px; overflow: hidden; background: #0b1220; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0b1220; }
+      #ground { position: absolute; inset: 0; background:
+        radial-gradient(900px 700px at 50% 18%, #1b2a4a 0%, rgba(27, 42, 74, 0) 70%),
+        radial-gradient(700px 500px at 50% 100%, rgba(196, 248, 122, 0.10) 0%, rgba(196, 248, 122, 0) 70%),
+        #0b1220; }
+      .scene { position: absolute; inset: 0; }
+      #explorer { z-index: 1; }
+      #app { z-index: 2; }
+      #ai { z-index: 3; }
+      #end { z-index: 4; }
+      #captions { z-index: 10; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="22" data-width="1080" data-height="1350">
+      <div id="ground"></div>
+      <div id="explorer" class="scene" data-composition-id="explorer" data-composition-src="compositions/explorer.html"
+           data-start="0" data-duration="4.2" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="app" class="scene" data-composition-id="app" data-composition-src="compositions/app.html"
+           data-start="4" data-duration="8.8" data-track-index="2" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="ai" class="scene" data-composition-id="ai" data-composition-src="compositions/ai.html"
+           data-start="12.8" data-duration="5" data-track-index="3" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="end" class="scene" data-composition-id="end" data-composition-src="compositions/end.html"
+           data-start="17.8" data-duration="4.2" data-track-index="4" data-track-kind="graphics" data-width="1080" data-height="1350"></div>
+      <div id="captions" class="scene" data-composition-id="captions" data-composition-src="compositions/captions.html"
+           data-start="0" data-duration="22" data-track-index="5" data-track-kind="captions" data-width="1080" data-height="1350"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

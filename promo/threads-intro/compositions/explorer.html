@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Pretendard"; font-weight: 400; src: url("assets/fonts/Pretendard-Regular.woff2") format("woff2"); }
+        @font-face { font-family: "Pretendard"; font-weight: 700; src: url("assets/fonts/Pretendard-Bold.woff2") format("woff2"); }
+        #root { position: absolute; inset: 0; font-family: "Pretendard", sans-serif; color: #1f2937; }
+        #ex-win { position: absolute; left: 70px; top: 150px; width: 940px; height: 860px; background: #ffffff; border-radius: 14px;
+                  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); overflow: hidden; display: flex; flex-direction: column; }
+        .titlebar { height: 48px; display: flex; align-items: center; padding: 0 14px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; font-size: 15px; gap: 10px; }
+        .titlebar .controls { margin-left: auto; display: flex; gap: 26px; color: #4b5563; font-size: 15px; }
+        .folder { width: 24px; height: 20px; position: relative; }
+        .folder::before { content: ""; position: absolute; left: 0; top: 0; width: 10px; height: 6px; background: #f2b84b; border-radius: 2px 2px 0 0; }
+        .folder::after { content: ""; position: absolute; left: 0; top: 4px; width: 24px; height: 16px; background: #f8c96a; border-radius: 2px; }
+        .address { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 15px; color: #374151; border-bottom: 1px solid #eef0f3; }
+        .address .box { flex: 1; height: 30px; border: 1px solid #d1d5db; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; gap: 8px; background: #fff; }
+        .address .box span { color: #9ca3af; }
+        .head { display: grid; grid-template-columns: 1fr 190px 130px 90px; padding: 8px 20px; font-size: 13px; color: #6b7280; border-bottom: 1px solid #eef0f3; }
+        .rows { flex: 1; padding: 6px 8px; }
+        .row { display: grid; grid-template-columns: 1fr 190px 130px 90px; align-items: center; padding: 0 12px; height: 52px; font-size: 20px; border-radius: 6px; }
+        .row:nth-child(odd) { background: #fafafa; }
+        .row .name { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+        .row .meta { color: #4b5563; font-size: 16px; }
+        .badge { width: 34px; height: 40px; border-radius: 5px; background: #e8eefc; border: 1px solid #c7d2fe; color: #1d4ed8; font-size: 11px; font-weight: 700;
+                 display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; letter-spacing: 0.02em; }
+        .statusbar { height: 38px; display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: #4b5563; background: #f9fafb; border-top: 1px solid #eef0f3; }
+        #ex-chip { position: absolute; left: 150px; top: 380px; width: 230px; height: 86px; border-radius: 14px; background: #ffffff; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+                   display: flex; align-items: center; gap: 14px; padding: 0 18px; font-size: 24px; font-weight: 700; opacity: 0; }
+        #ex-chip .folder { width: 44px; height: 36px; }
+        #ex-chip .folder::before { width: 18px; height: 10px; }
+        #ex-chip .folder::after { top: 7px; width: 44px; height: 29px; }
+        #ex-cursor { position: absolute; left: 0; top: 0; width: 70px; height: 70px; opacity: 0; }
+      </style>
+      <div id="root" data-composition-id="explorer" data-width="1080" data-height="1350">
+        <div id="ex-win">
+          <div class="titlebar"><div class="folder"></div><span>자료실</span><div class="controls"><span>─</span><span>☐</span><span>✕</span></div></div>
+          <div class="address"><span>←</span><span>→</span><span>↑</span><div class="box"><div class="folder"></div>내 PC <span>›</span> 문서 <span>›</span> 자료실</div></div>
+          <div class="head"><span>이름</span><span>수정한 날짜</span><span>유형</span><span style="text-align:right">크기</span></div>
+          <div class="rows" id="ex-rows">
+            <div class="row"><div class="name"><div class="badge">HWP</div>2026년 업무계획.hwp</div><span class="meta">2026-01-14 오전 9:12</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">184KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>회의록_3월.hwp</div><span class="meta">2026-03-05 오후 2:40</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">96KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>예산편성안.hwp</div><span class="meta">2026-02-21 오전 11:03</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">412KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>공문_시행.hwp</div><span class="meta">2026-04-02 오전 10:25</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">58KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>주민설명회 자료.hwp</div><span class="meta">2026-04-18 오후 4:51</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">1.2MB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>보도자료.hwp</div><span class="meta">2026-05-07 오전 8:30</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">77KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>사업계획서.hwp</div><span class="meta">2026-05-19 오후 1:17</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">640KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>정산보고.hwp</div><span class="meta">2026-06-11 오후 3:02</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">233KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>회의록_4월.hwp</div><span class="meta">2026-04-29 오후 5:45</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">102KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>조례개정안.hwp</div><span class="meta">2026-07-03 오전 9:58</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">315KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>민원답변.hwp</div><span class="meta">2026-07-22 오후 2:11</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">41KB</span></div>
+            <div class="row"><div class="name"><div class="badge">HWP</div>교육자료.hwp</div><span class="meta">2026-08-14 오전 10:36</span><span class="meta">한글 문서</span><span class="meta" style="text-align:right">890KB</span></div>
+          </div>
+          <div class="statusbar">항목 12개</div>
+        </div>
+        <div id="ex-chip"><div class="folder"></div>자료실</div>
+        <svg id="ex-cursor" viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L16.5 21l-3 1.2-3.6-7.4L5 19z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#ex-win", { scale: 0.985, y: 14 }, { scale: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0);
+        tl.fromTo("#ex-rows .row", { opacity: 0.4, x: -18 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out", stagger: 0.04 }, 0);
+        // 커서가 오른쪽 아래에서 들어와 제목 표시줄의 폴더로 간다
+        tl.fromTo("#ex-cursor", { x: 1000, y: 1250, opacity: 0 }, { x: 460, y: 760, opacity: 1, duration: 0.55, ease: "power3.inOut" }, 2.3);
+        tl.to("#ex-cursor", { x: 120, y: 170, duration: 0.5, ease: "power2.inOut" }, 2.9);
+        // 집는 순간: 폴더 칩이 나타나 커서를 따라 화면 아래로 끌려 나간다
+        tl.set("#ex-chip", { x: -40, y: -230 }, 0);
+        tl.fromTo("#ex-chip", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.2, ease: "back.out(1.6)" }, 3.3);
+        tl.to("#ex-cursor", { x: 560, y: 330, duration: 0.7, ease: "power3.inOut" }, 3.45);
+        tl.to("#ex-chip", { x: 290, y: -150, duration: 0.7, ease: "power3.inOut" }, 3.45);
+        tl.to("#ex-win", { opacity: 0, filter: "blur(14px)", scale: 0.97, duration: 0.6, ease: "power2.in" }, 3.6);
+        window.__timelines["explorer"] = tl;
+      </script>
+    </template>
+  </body>
+</html>
