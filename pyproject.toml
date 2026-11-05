@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "docforai"
-version = "1.0.0"
+version = "1.1.0"
 description = "Offline document conversion to Markdown and structured JSON"
 readme = "README.md"
 requires-python = ">=3.10,<3.15"
@@ -38,6 +38,9 @@ docforai-gui = "docforai.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+docforai = ["assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

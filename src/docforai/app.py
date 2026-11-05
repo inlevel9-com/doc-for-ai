@@ -10,7 +10,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from . import APP_NAME, __version__
+from . import APP_NAME, DESIGNED_BY, __version__
+from .paths import asset_path
 from .engine import (
     AUDIO_FORMATS,
     FORMAT_LABEL,
@@ -54,7 +55,8 @@ class App:
                 self.has_dnd = True
             except RuntimeError:
                 pass
-        self.root.title(f"{APP_NAME} {__version__}")
+        self.root.title(f"{APP_NAME} {__version__} | {DESIGNED_BY}")
+        self._set_icon()
         self.root.geometry("760x620")
         self.root.minsize(640, 520)
         self.files: list[Path] = []
@@ -74,6 +76,16 @@ class App:
 
         self._build()
         self.root.after(150, self._poll)
+
+    def _set_icon(self) -> None:
+        """창과 작업 표시줄에 서비스 아이콘을 표시한다. 아이콘이 없어도 실행은 계속된다."""
+        try:
+            if sys.platform == "win32":
+                self.root.iconbitmap(default=str(asset_path("icon.ico")))
+            self._icon_image = tk.PhotoImage(file=str(asset_path("icon.png")))
+            self.root.iconphoto(True, self._icon_image)
+        except (tk.TclError, OSError):
+            pass
 
     # ---------- 화면 구성 ----------
     def _build(self) -> None:

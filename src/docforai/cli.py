@@ -9,7 +9,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__
+from . import DESIGNED_BY, __version__
 from .engine import ConvertOptions, ConvertResult, convert_many, excel_from_json_many
 
 SUBCOMMANDS = {"to-excel"}
@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-json", action="store_true", help="JSON 을 만들지 않음")
     ap.add_argument("--no-images", action="store_true", help="그림을 저장하지 않음")
     ap.add_argument("--gui", action="store_true", help="그래픽 창 열기")
-    ap.add_argument("-V", "--version", action="version", version=f"docforai {__version__}")
+    ap.add_argument("-V", "--version", action="version", version=f"docforai {__version__} | {DESIGNED_BY}")
     args = ap.parse_args(argv)
 
     if args.gui or not args.paths:

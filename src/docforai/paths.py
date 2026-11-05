@@ -15,3 +15,10 @@ def app_dir() -> Path:
 def bundle_dir() -> Path:
     """Return the bundled resource directory or the source package directory."""
     return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+
+
+def asset_path(name: str) -> Path:
+    """아이콘 등 패키지에 포함된 리소스 파일의 경로."""
+    if getattr(sys, "frozen", False):
+        return bundle_dir() / "docforai" / "assets" / name
+    return Path(__file__).resolve().parent / "assets" / name

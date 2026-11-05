@@ -1,0 +1,125 @@
+name: Build packages
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: x64
+      - name: Install and test
+        run: |
+          python -m pip install ".[test]"
+          python -m pytest -q
+      - name: Prepare wheelhouse
+        shell: pwsh
+        run: .\scripts\download-wheels.ps1
+      - name: Build from local wheels
+        shell: pwsh
+        run: .\scripts\build-windows.ps1
+      - name: Check portable ZIP
+        shell: pwsh
+        run: |
+          $archives = @(Get-ChildItem -LiteralPath dist -Filter 'docforai-v*-windows-x64.zip' -File)
+          if ($archives.Count -ne 1) {
+            throw "Expected exactly one Windows ZIP."
+          }
+          $extracted = Join-Path $env:RUNNER_TEMP 'docforai-package'
+          Expand-Archive -LiteralPath $archives[0].FullName -DestinationPath $extracted
+          $bundle = Join-Path $extracted 'docforai'
+          foreach ($file in @('docforai.exe', 'LICENSE', 'usage.txt', 'docs/OFFLINE.md')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $bundle $file) -PathType Leaf)) {
+              throw "The Windows ZIP is missing $file."
+            }
+          }
+      - uses: actions/upload-artifact@v6
+        with:
+          name: docforai-windows-x64
+          path: dist/docforai-v*-windows-x64.zip
+          if-no-files-found: error
+          compression-level: 0
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install and test
+        run: |
+          python -m pip install ".[test]"
+          python -m pytest -q
+      - name: Build app bundle
+        run: PYTHON=python ./scripts/build-macos.sh
+      - name: Check portable ZIP
+        run: |
+          archives=(dist/docforai-v*-macos-arm64.zip)
+          if [ "${#archives[@]}" -ne 1 ] || [ ! -f "${archives[0]}" ]; then
+            echo "::error::Expected exactly one macOS ZIP."
+            exit 1
+          fi
+          extracted="$RUNNER_TEMP/docforai-package"
+          ditto -x -k "${archives[0]}" "$extracted"
+          bundle="$extracted/docforai"
+          for file in "AI 문서 변환기.app/Contents/MacOS/docforai" "AI 문서 변환기.app/Contents/Info.plist" LICENSE usage.txt docs/OFFLINE.md; do
+            if [ ! -f "$bundle/$file" ]; then
+              echo "::error::The macOS ZIP is missing $file."
+              exit 1
+            fi
+          done
+          file "$bundle/AI 문서 변환기.app/Contents/MacOS/docforai" | grep -q "arm64"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: docforai-macos-arm64
+          path: dist/docforai-v*-macos-arm64.zip
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: docforai-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          archives=("dist/docforai-${TAG}-windows-x64.zip" "dist/docforai-${TAG}-macos-arm64.zip")
+          for archive in "${archives[@]}"; do
+            if [ ! -f "$archive" ]; then
+              echo "::error::Expected $archive. The tag must match the version in pyproject.toml."
+              ls -l dist
+              exit 1
+            fi
+          done
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${archives[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "${archives[@]}" --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes
+          fi

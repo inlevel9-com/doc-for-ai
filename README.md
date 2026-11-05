@@ -1,16 +1,30 @@
-# Doc for AI · AI 문서 변환기
+<img src="src/docforai/assets/icon-64.png" width="64" height="64" alt="AI 문서 변환기 아이콘" align="left">
+
+# AI 문서 변환기 | Designed by INLEVEL9
+
+<br clear="all">
 
 한글, 워드, 파워포인트, 엑셀, PDF 등 문서의 내용을 글자 파일로 바꿉니다. 예를 들어 `회의록.hwpx`를 변환하면 메모장으로 읽을 수 있는 `회의록.md`와 프로그램에서 처리하기 쉬운 `회의록.json`을 만들 수 있습니다.
 
-Windows에서 `docforai.exe`를 두 번 클릭하면 **AI 문서 변환기** 창이 열립니다. 이 창에서 문서를 고르고 변환한 뒤 결과 폴더를 열 수 있습니다. 배포 파일을 받아 두면 인터넷이 끊긴 PC에서도 변환할 수 있습니다.
+Windows에서 `docforai.exe`를, Mac에서 `AI 문서 변환기.app`을 두 번 클릭하면 **AI 문서 변환기** 창이 열립니다. 이 창에서 문서를 고르고 변환한 뒤 결과 폴더를 열 수 있습니다. 배포 파일을 받아 두면 인터넷이 끊긴 PC에서도 변환할 수 있습니다.
 
-## 1. Windows에서 프로그램 열기
+## 1. 프로그램 열기
+
+### Windows
 
 1. [최신 버전 내려받기](https://github.com/inlevel9-com/doc-for-ai/releases/latest)를 열고 **Assets**에서 이름이 `-windows-x64.zip`으로 끝나는 파일을 내려받으세요.
 2. 내려받은 ZIP 파일을 마우스 오른쪽 버튼으로 클릭하고 **모두 추출** 또는 **압축 풀기**를 선택하세요.
 3. 압축을 푼 폴더에서 `docforai.exe`를 두 번 클릭하세요. Windows에서 파일 이름 끝을 숨기는 경우 `docforai`로 보일 수 있습니다. 압축을 푼 폴더 안의 파일은 함께 두세요.
 
 폐쇄망 PC에서 사용하려면 인터넷이 되는 PC에서 ZIP을 받은 뒤 기관에서 허용하는 방법으로 옮기세요. 프로그램 설치나 계정 등록 없이 위와 같은 순서로 실행할 수 있습니다. [폐쇄망 사용 안내](docs/OFFLINE.md#windows-x64에서-실행)
+
+### Mac
+
+Apple Silicon(M1 이후) Mac용 파일을 함께 배포합니다. Intel Mac은 지원하지 않습니다.
+
+1. [최신 버전 내려받기](https://github.com/inlevel9-com/doc-for-ai/releases/latest)의 **Assets**에서 이름이 `-macos-arm64.zip`으로 끝나는 파일을 내려받으세요. 내려받기 폴더에서 두 번 클릭하면 압축이 풀립니다.
+2. 압축을 푼 폴더 안의 `AI 문서 변환기`를 두 번 클릭하세요.
+3. 처음 열 때 "확인되지 않은 개발자" 또는 "열 수 없습니다" 안내가 나오면 **시스템 설정 → 개인정보 보호 및 보안**으로 가서 아래쪽의 **그래도 열기**를 누르세요. 이 프로그램은 Apple 개발자 서명을 받지 않았기 때문에 처음 한 번만 이 확인이 필요합니다. 이후에는 바로 열립니다.
 
 ## 2. 문서 변환하기
 
@@ -26,7 +40,7 @@ Windows에서 `docforai.exe`를 두 번 클릭하면 **AI 문서 변환기** 창
 
 **변환이 끝난 화면**
 
-![문서 세 개가 완료 상태로 표시되고 결과 폴더 열기 버튼을 누를 수 있는 화면](docs/screenshots/conversion-complete.png)
+![문서 세 개가 완료 상태로 표시되고 결과 폴더 열기와 JSON → 엑셀로 되돌리기 버튼을 누를 수 있는 화면](docs/screenshots/conversion-complete.png)
 
 ## 3. 변환 결과 읽기
 
