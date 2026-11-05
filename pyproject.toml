@@ -23,6 +23,7 @@ dependencies = [
   "tinytag>=2.0,<3",
   "unhwp==0.23.1",
   "xlrd>=2.0.2,<3",
+  "pywin32>=306; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]

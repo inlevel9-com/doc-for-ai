@@ -17,6 +17,14 @@ docforai\tools\LibreOffice\program\soffice.exe
 docforai\tools\LibreOfficePortable\App\libreoffice\program\soffice.exe
 ```
 
+## 한글 hwpx 저장
+
+`.hwp`를 `.hwpx`로 다시 저장하는 기능은 PC에 설치된 **한컴오피스 한글**을 자동으로 조종합니다(Windows 전용, 2018 이상 권장). 프로그램 안에 한글이 들어 있는 것이 아니므로 한글이 없는 PC에서는 체크 항목이 꺼지고, 나머지 변환은 그대로 됩니다. 인터넷은 쓰지 않습니다.
+
+- 결과 `.hwpx`는 `.md`, `.json`과 같은 결과 폴더에 생기고 원본 `.hwp`는 바꾸지 않습니다. 암호·배포용 문서는 한글이 열지 못해 건너뛰며, 목록의 주의 표시에 이유가 남습니다.
+- 한글은 다른 프로그램이 문서를 열 때 **파일 접근 확인 창**을 띄울 수 있습니다. 문서가 많을 때는 한컴 자동화 보안 모듈(`FilePathCheckerModule`)을 레지스트리 `HKEY_CURRENT_USER\Software\HNC\HwpAutomation\Modules`에 등록해 두면 창이 뜨지 않습니다. 모듈 파일은 한컴오피스 자동화 SDK에 들어 있으며 이 프로그램에는 포함하지 않습니다.
+- 한글이 설치된 Windows PC에서 실제로 확인해야 하는 기능입니다. 문제가 있으면 목록의 빨간 줄이나 주의 표시를 두 번 눌러 이유를 확인하세요.
+
 ## 폐쇄망에서 Windows 패키지 빌드
 
 인터넷에 연결된 준비 PC와 빌드 PC 모두 Windows x64, PowerShell 7.4 이상, PATH에서 실행할 수 있는 Python 3.12 x64가 필요합니다.

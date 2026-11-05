@@ -68,7 +68,9 @@ analysis = Analysis(
     datas=copy_metadata("mammoth") + copy_metadata("markdownify") + [(str(ASSETS), "docforai/assets")],
     # Pillow 플러그인(JPEG/PNG/GIF/BMP/TIFF/WebP)은 PyInstaller 훅이 모으지만 명시해 둔다.
     hiddenimports=["PIL.JpegImagePlugin", "PIL.PngImagePlugin", "PIL.GifImagePlugin", "PIL.BmpImagePlugin",
-                   "PIL.TiffImagePlugin", "PIL.WebPImagePlugin", "tinytag"],
+                   "PIL.TiffImagePlugin", "PIL.WebPImagePlugin", "tinytag"]
+    # 한글 자동화(hwp → hwpx 저장)는 Windows 에서만 쓰는 COM 모듈이다.
+    + (["win32com.client", "pythoncom", "pywintypes"] if platform.system() == "Windows" else []),
 )
 pyz = PYZ(analysis.pure)
 exe = EXE(pyz, analysis.scripts, [], exclude_binaries=True, name="docforai", console=False, upx=False,

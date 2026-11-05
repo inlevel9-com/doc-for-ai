@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
 
+from .hancom import HWPX_SOURCE_FORMATS, HancomMissing, HancomSession
 from .media import AUDIO_FORMATS, IMAGE_FORMATS
 from .schema import Converted, build_document
 
@@ -47,6 +48,7 @@ class ConvertOptions:
     save_images: bool = True
     out_dir: Path | None = None  # None 이면 원본 옆 '변환결과' 폴더
     overwrite: bool = True
+    save_hwpx: bool = False  # .hwp 를 .hwpx 로도 저장 (Windows + 한컴오피스 한글 필요)
 
 
 @dataclass
@@ -140,7 +142,8 @@ def _convert(source: Path, fmt: str, image_prefix: str, workdir: Path) -> Conver
     raise ValueError(f"지원하지 않는 형식입니다: .{fmt}")
 
 
-def convert_file(source: Path, opts: ConvertOptions | None = None) -> ConvertResult:
+def convert_file(source: Path, opts: ConvertOptions | None = None, hancom: "HancomSession | None" = None) -> ConvertResult:
+    """문서 하나를 변환한다. hancom 은 convert_many 가 일괄 작업 동안 재사용하는 한글 세션(없으면 필요할 때 만든다)."""
     opts = opts or ConvertOptions()
     source = Path(source)
     fmt = detect_format(source)
@@ -181,7 +184,15 @@ def convert_file(source: Path, opts: ConvertOptions | None = None) -> ConvertRes
             msg += f" · 시트 {len(conv.sheets)}개"
         if fmt in ARCHIVE_FORMATS:
             msg += f" · 문서 {len(conv.metadata.get('entries') or [])}개"
-        return ConvertResult(source, True, msg, outputs, list(conv.warnings), fmt)
+        warnings = list(conv.warnings)
+        if opts.save_hwpx and fmt in HWPX_SOURCE_FORMATS:
+            hwpx_path, note = _save_hwpx(source, out_dir / f"{stem}.hwpx", hancom)
+            if hwpx_path:
+                outputs.append(hwpx_path)
+                msg += " · hwpx 저장"
+            else:
+                warnings.append(note)
+        return ConvertResult(source, True, msg, outputs, warnings, fmt)
     except Exception as e:  # noqa: BLE001 - 사용자에게는 원인만 짧게, 로그에는 전체
         return ConvertResult(source, False, friendly_error(e), warnings=[traceback.format_exc()], fmt=fmt)
     finally:
@@ -190,14 +201,36 @@ def convert_file(source: Path, opts: ConvertOptions | None = None) -> ConvertRes
 
 def convert_many(paths: Iterable[Path], opts: ConvertOptions | None = None,
                  progress: Callable[[int, int, ConvertResult], None] | None = None) -> list[ConvertResult]:
+    opts = opts or ConvertOptions()
     files = iter_documents(paths)
     results = []
-    for i, f in enumerate(files, 1):
-        r = convert_file(f, opts)
-        results.append(r)
-        if progress:
-            progress(i, len(files), r)
+    # hwpx 저장은 한글을 한 번만 띄워 모든 문서에 재사용한다(문서마다 띄우면 느리다).
+    hancom = HancomSession() if opts.save_hwpx else None
+    try:
+        for i, f in enumerate(files, 1):
+            r = convert_file(f, opts, hancom)
+            results.append(r)
+            if progress:
+                progress(i, len(files), r)
+    finally:
+        if hancom is not None:
+            hancom.close()
     return results
+
+
+def _save_hwpx(source: Path, target: Path, hancom: "HancomSession | None") -> tuple[Path | None, str]:
+    """원본 .hwp 를 .hwpx 로 저장한다. 실패해도 본 변환은 성공으로 두고 이유만 돌려준다."""
+    own = hancom is None
+    session = hancom or HancomSession()
+    try:
+        return session.save_as_hwpx(source, target), ""
+    except HancomMissing as e:
+        return None, f"hwpx 저장 건너뜀: {e}"
+    except Exception as e:  # noqa: BLE001
+        return None, f"hwpx 저장 실패: {str(e)[:160]}"
+    finally:
+        if own:
+            session.close()
 
 
 def excel_from_json(source: Path, opts: ConvertOptions | None = None) -> ConvertResult:

@@ -54,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-md", action="store_true", help="Markdown 을 만들지 않음")
     ap.add_argument("--no-json", action="store_true", help="JSON 을 만들지 않음")
     ap.add_argument("--no-images", action="store_true", help="그림을 저장하지 않음")
+    ap.add_argument("--hwpx", action="store_true", help=".hwp 를 .hwpx 로도 저장 (Windows + 한컴오피스 한글 필요)")
     ap.add_argument("--gui", action="store_true", help="그래픽 창 열기")
     ap.add_argument("-V", "--version", action="version", version=f"docforai {__version__} | {DESIGNED_BY}")
     args = ap.parse_args(argv)
@@ -65,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     opts = ConvertOptions(write_markdown=not args.no_md, write_json=not args.no_json,
-                          save_images=not args.no_images, out_dir=args.out)
+                          save_images=not args.no_images, out_dir=args.out, save_hwpx=args.hwpx)
     report, fails = _report_factory()
     convert_many(args.paths, opts, report)
     return 1 if fails[0] else 0

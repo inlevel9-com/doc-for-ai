@@ -1,3 +1,4 @@
 include docs/*.md docs/usage.txt
 include docs/screenshots/*.png
+recursive-include docs/skills *.md *.py
 recursive-include scripts *.ps1 *.sh *.py *.spec *.txt

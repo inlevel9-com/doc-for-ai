@@ -11,6 +11,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import APP_NAME, DESIGNED_BY, __version__
+from .engine.hancom import unavailable_reason as hancom_unavailable_reason
 from .paths import asset_path
 from .engine import (
     AUDIO_FORMATS,
@@ -123,6 +124,12 @@ class App:
         ttk.Checkbutton(row, text="Markdown (.md) — 사람이 읽기 좋고 AI 에 바로 넣기 좋음", variable=self.v_md).pack(anchor="w")
         ttk.Checkbutton(row, text="JSON (.json) — 표·문단·메타데이터가 구조화된 학습용", variable=self.v_json).pack(anchor="w")
         ttk.Checkbutton(row, text="문서 안의 그림도 함께 저장", variable=self.v_img).pack(anchor="w")
+        self.v_hwpx = tk.BooleanVar(value=False)
+        hwpx_reason = hancom_unavailable_reason()
+        hwpx_text = "한글 .hwp 를 .hwpx 로도 저장 (한컴오피스 한글이 설치된 Windows PC)"
+        if hwpx_reason:
+            hwpx_text = f"한글 .hwp 를 .hwpx 로도 저장 — 사용 불가: {hwpx_reason}"
+        ttk.Checkbutton(row, text=hwpx_text, variable=self.v_hwpx, state="normal" if not hwpx_reason else "disabled").pack(anchor="w")
 
         out = ttk.Frame(opt)
         out.pack(fill="x", padx=8, pady=(2, 8))
@@ -232,7 +239,8 @@ class App:
                 messagebox.showwarning("폴더 선택", "결과를 저장할 폴더를 골라 주세요.")
                 return
             out_dir = Path(self.v_outdir.get().strip())
-        opts = ConvertOptions(write_markdown=self.v_md.get(), write_json=self.v_json.get(), save_images=self.v_img.get(), out_dir=out_dir)
+        opts = ConvertOptions(write_markdown=self.v_md.get(), write_json=self.v_json.get(), save_images=self.v_img.get(),
+                              out_dir=out_dir, save_hwpx=self.v_hwpx.get())
         self.results.clear()
         self.last_out_dirs.clear()
         self.progress.config(maximum=len(self.files), value=0)
