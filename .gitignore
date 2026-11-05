@@ -18,3 +18,4 @@ promo/*/node_modules/
 promo/*/.hyperframes/
 promo/*/out/
 promo/*/*.mp4
+promo/*/.thumbnails/
