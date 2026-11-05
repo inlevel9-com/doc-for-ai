@@ -2,7 +2,7 @@
 
 ## Windows x64에서 실행
 
-1. 인터넷에 연결된 PC에서 `docforai-vX.Y.Z-windows-x64.zip`을 받습니다. GitHub에서 빌드한 파일은 **Actions → Build Windows package → 성공한 실행 → Artifacts → docforai-windows-x64**에서 받을 수 있습니다. Actions에서 받은 ZIP은 먼저 압축을 풀어 그 안의 배포 ZIP을 꺼냅니다.
+1. 인터넷에 연결된 PC에서 [최신 릴리스](https://github.com/inlevel9-com/doc-for-ai/releases/latest)의 **Assets**에서 `docforai-vX.Y.Z-windows-x64.zip`을 받습니다. 아직 릴리스되지 않은 빌드는 **Actions → Build Windows package → 성공한 실행 → Artifacts → docforai-windows-x64**에서 받을 수 있으며, 이 경우 받은 ZIP을 먼저 풀어 그 안의 배포 ZIP을 꺼냅니다.
 2. 기관에서 허용한 전송 방식으로 옮긴 뒤 원하는 폴더에 압축을 풉니다. 예를 들어 `D:\docforai\`에 둘 수 있습니다.
 3. 압축을 푼 폴더에서 `docforai.exe`를 엽니다. ZIP에서 꺼낸 파일은 같은 폴더 구조로 유지합니다.
 

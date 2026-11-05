@@ -6,7 +6,7 @@ Windows에서 `docforai.exe`를 두 번 클릭하면 **AI 문서 변환기** 창
 
 ## 1. Windows에서 프로그램 열기
 
-1. GitHub의 **Releases**에 배포 파일이 올라오면 이름이 `-windows-x64.zip`으로 끝나는 파일을 내려받으세요.
+1. [최신 버전 내려받기](https://github.com/inlevel9-com/doc-for-ai/releases/latest)를 열고 **Assets**에서 이름이 `-windows-x64.zip`으로 끝나는 파일을 내려받으세요.
 2. 내려받은 ZIP 파일을 마우스 오른쪽 버튼으로 클릭하고 **모두 추출** 또는 **압축 풀기**를 선택하세요.
 3. 압축을 푼 폴더에서 `docforai.exe`를 두 번 클릭하세요. Windows에서 파일 이름 끝을 숨기는 경우 `docforai`로 보일 수 있습니다. 압축을 푼 폴더 안의 파일은 함께 두세요.
 
