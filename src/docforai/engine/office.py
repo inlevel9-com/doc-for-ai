@@ -25,7 +25,7 @@ def convert_office(path: Path, fmt: str, image_prefix: str) -> Converted:
     elif fmt == "pdf":
         converted = _convert_pdf(path)
     else:
-        return convert_text(path, fmt)
+        return convert_text(path, fmt)  # 구형 문서 변환 결과가 다른 형식으로 올 때의 안전망
 
     if fmt in {"docx", "pptx", "xlsx"}:
         converted.images = _ooxml_media(path)

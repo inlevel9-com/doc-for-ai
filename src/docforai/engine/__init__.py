@@ -12,23 +12,31 @@ import json
 import shutil
 import tempfile
 import traceback
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
 
+from .media import AUDIO_FORMATS, IMAGE_FORMATS
 from .schema import Converted, build_document
 
 OUTPUT_DIR_NAME = "변환결과"
 
 HWP_FORMATS = {"hwp", "hwpx", "hwt", "hml"}
-OFFICE_FORMATS = {"docx", "pptx", "xlsx", "xls", "pdf", "csv", "html", "htm", "txt", "md", "json", "xml", "epub"}
+OFFICE_FORMATS = {"docx", "pptx", "xlsx", "xls", "pdf"}
+TEXT_FORMATS = {"csv", "html", "htm", "txt", "md", "markdown", "json", "xml", "epub"}
+ARCHIVE_FORMATS = {"zip"}
 LEGACY_FORMATS = {"doc", "ppt", "rtf", "odt", "odp", "ods"}
-SUPPORTED = HWP_FORMATS | OFFICE_FORMATS | LEGACY_FORMATS
+SUPPORTED = HWP_FORMATS | OFFICE_FORMATS | TEXT_FORMATS | ARCHIVE_FORMATS | IMAGE_FORMATS | AUDIO_FORMATS | LEGACY_FORMATS
 
 FORMAT_LABEL = {
     "hwp": "한글 문서", "hwpx": "한글 문서(HWPX)", "hwt": "한글 서식", "hml": "한글 HML",
     "docx": "워드", "doc": "워드(구형)", "pptx": "파워포인트", "ppt": "파워포인트(구형)",
     "xlsx": "엑셀", "xls": "엑셀(구형)", "pdf": "PDF", "csv": "CSV", "txt": "텍스트",
+    "md": "Markdown", "markdown": "Markdown", "html": "웹 문서", "htm": "웹 문서", "json": "JSON", "xml": "XML",
+    "epub": "전자책", "zip": "압축 파일", "rtf": "서식 있는 텍스트",
+    "odt": "오픈문서 글", "odp": "오픈문서 발표", "ods": "오픈문서 표",
+    **{e: "그림" for e in IMAGE_FORMATS}, **{e: "소리" for e in AUDIO_FORMATS},
 }
 
 
@@ -113,6 +121,22 @@ def _convert(source: Path, fmt: str, image_prefix: str, workdir: Path) -> Conver
         from .office import convert_office
 
         return convert_office(source, fmt, image_prefix)
+    if fmt in TEXT_FORMATS:
+        from .text_documents import convert_text
+
+        return convert_text(source, "md" if fmt == "markdown" else fmt)
+    if fmt in IMAGE_FORMATS:
+        from .media import convert_image
+
+        return convert_image(source, image_prefix)
+    if fmt in AUDIO_FORMATS:
+        from .media import convert_audio
+
+        return convert_audio(source)
+    if fmt in ARCHIVE_FORMATS:
+        from .archives import convert_archive
+
+        return convert_archive(source, image_prefix, workdir, _convert, SUPPORTED)
     raise ValueError(f"지원하지 않는 형식입니다: .{fmt}")
 
 
@@ -155,6 +179,8 @@ def convert_file(source: Path, opts: ConvertOptions | None = None) -> ConvertRes
             msg += f" · 그림 {len(conv.images)}장"
         if conv.sheets:
             msg += f" · 시트 {len(conv.sheets)}개"
+        if fmt in ARCHIVE_FORMATS:
+            msg += f" · 문서 {len(conv.metadata.get('entries') or [])}개"
         return ConvertResult(source, True, msg, outputs, list(conv.warnings), fmt)
     except Exception as e:  # noqa: BLE001 - 사용자에게는 원인만 짧게, 로그에는 전체
         return ConvertResult(source, False, friendly_error(e), warnings=[traceback.format_exc()], fmt=fmt)
@@ -174,6 +200,41 @@ def convert_many(paths: Iterable[Path], opts: ConvertOptions | None = None,
     return results
 
 
+def excel_from_json(source: Path, opts: ConvertOptions | None = None) -> ConvertResult:
+    """역변환: 이 프로그램이 만든 JSON → 엑셀(.xlsx). GUI/CLI 양쪽에서 쓴다."""
+    from .reverse import NotDocforaiJson, json_to_xlsx
+
+    opts = opts or ConvertOptions()
+    source = Path(source)
+    if not source.exists():
+        return ConvertResult(source, False, "파일을 찾을 수 없습니다", fmt="json")
+    try:
+        target, warnings = json_to_xlsx(source, opts.out_dir)
+    except NotDocforaiJson as e:
+        return ConvertResult(source, False, str(e), fmt="json")
+    except Exception as e:  # noqa: BLE001
+        return ConvertResult(source, False, friendly_error(e), warnings=[traceback.format_exc()], fmt="json")
+    return ConvertResult(source, True, f"완료 · {target.name}", [target], warnings, "json")
+
+
+def excel_from_json_many(paths: Iterable[Path], opts: ConvertOptions | None = None,
+                         progress: Callable[[int, int, ConvertResult], None] | None = None) -> list[ConvertResult]:
+    files: list[Path] = []
+    for p in paths:
+        p = Path(p)
+        if p.is_dir():
+            files.extend(f for f in sorted(p.rglob("*.json")) if f.is_file() and not f.name.startswith("."))
+        else:
+            files.append(p)
+    results = []
+    for i, f in enumerate(files, 1):
+        r = excel_from_json(f, opts)
+        results.append(r)
+        if progress:
+            progress(i, len(files), r)
+    return results
+
+
 def friendly_error(e: Exception) -> str:
     from .hwp import HwpLocked
     from .legacy import LegacyPackMissing
@@ -182,6 +243,8 @@ def friendly_error(e: Exception) -> str:
         return "암호가 걸려 있거나 배포용 문서라 내용을 읽을 수 없습니다"
     if isinstance(e, LegacyPackMissing):
         return str(e)
+    if isinstance(e, zipfile.BadZipFile):
+        return "압축 파일이 손상되었거나 ZIP 형식이 아닙니다"
     if isinstance(e, PermissionError):
         return "파일이 다른 프로그램에서 열려 있거나 권한이 없습니다"
     if isinstance(e, MemoryError):

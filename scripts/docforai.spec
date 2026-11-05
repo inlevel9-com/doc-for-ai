@@ -28,7 +28,9 @@ analysis = Analysis(
     pathex=[str(ROOT / "src")],
     binaries=hwp_binaries,
     datas=copy_metadata("mammoth") + copy_metadata("markdownify"),
-    hiddenimports=[],
+    # Pillow 플러그인(JPEG/PNG/GIF/BMP/TIFF/WebP)은 PyInstaller 훅이 모으지만 명시해 둔다.
+    hiddenimports=["PIL.JpegImagePlugin", "PIL.PngImagePlugin", "PIL.GifImagePlugin", "PIL.BmpImagePlugin",
+                   "PIL.TiffImagePlugin", "PIL.WebPImagePlugin", "tinytag"],
 )
 pyz = PYZ(analysis.pure)
 exe = EXE(pyz, analysis.scripts, [], exclude_binaries=True, name="docforai", console=False, upx=False)

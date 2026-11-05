@@ -4,7 +4,7 @@
   document = { schema, source, metadata, markdown, blocks, tables, sheets, chunks, warnings }
 
 blocks 는 Markdown 을 줄 단위로 해석해 만든다. 완벽한 Markdown 파서가 아니라
-변환기가 내보내는 Markdown(제목·문단·표·목록·이미지·슬라이드 구분)만 다룬다.
+변환기가 내보내는 Markdown(제목·문단·표·목록·이미지·코드·슬라이드 구분)만 다룬다.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ _OLIST = re.compile(r"^\s*(\d+)[.)]\s+(.*)$")
 _IMAGE = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$")
 _SLIDE = re.compile(r"^<!--\s*Slide number:\s*(\d+)\s*-->\s*$")
 _TABLE_SEP = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$")
+_FENCE = re.compile(r"^(`{3,})\s*([\w.+#-]*)\s*$")
 
 
 @dataclass
@@ -33,8 +34,16 @@ class Converted:
     engine: str
     metadata: dict[str, Any] = field(default_factory=dict)
     images: list[tuple[str, bytes]] = field(default_factory=list)  # (파일명, 바이트)
-    sheets: list[dict[str, Any]] | None = None  # 엑셀 전용: [{name, header, records}]
+    sheets: list[dict[str, Any]] | None = None  # 엑셀·표 형태 JSON 전용: [{name, header, records}]
     warnings: list[str] = field(default_factory=list)
+
+
+def code_fence(text: str, language: str = "") -> str:
+    """본문 안에 넣어도 깨지지 않는 코드 울타리를 만든다(내용에 ``` 가 있으면 더 긴 울타리)."""
+    fence = "```"
+    while fence in text:
+        fence += "`"
+    return f"{fence}{language}\n{text.rstrip()}\n{fence}"
 
 
 def markdown_table(rows: list[list[Any]]) -> str:
@@ -88,6 +97,20 @@ def markdown_to_blocks(md: str) -> list[dict[str, Any]]:
             flush_para()
             blocks.append({"type": "slide", "number": int(m.group(1))})
             i += 1
+            continue
+
+        # 코드 울타리(```lang … ```): JSON·XML 원문처럼 줄 구조를 그대로 보존해야 하는 내용
+        m = _FENCE.match(stripped)
+        if m:
+            flush_para()
+            fence, language = m.group(1), m.group(2)
+            code: list[str] = []
+            i += 1
+            while i < len(lines) and lines[i].strip() != fence:
+                code.append(lines[i])
+                i += 1
+            i += 1  # 닫는 울타리
+            blocks.append({"type": "code", "language": language, "text": "\n".join(code)})
             continue
 
         m = _HEADING.match(stripped)
@@ -153,6 +176,8 @@ def _block_text(block: dict[str, Any]) -> str:
         return _table_as_text(block)
     if t == "image":
         return f"[이미지: {block.get('alt') or block['path']}]"
+    if t == "code":
+        return block["text"]
     return ""
 
 

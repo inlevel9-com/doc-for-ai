@@ -54,7 +54,7 @@ def samples(tmp_path: Path) -> Path:
     p.save(d / "설명회.pptx")
 
     (d / "메모.txt").write_text("그냥 텍스트", encoding="utf-8")
-    (d / "사진.png").write_bytes(b"\x89PNG\r\n\x1a\n")  # 지원 안 하는 형식
+    (d / "설치.exe").write_bytes(b"MZ")  # 지원 안 하는 형식
     return d
 
 
@@ -228,9 +228,12 @@ def test_pdf_extracts_korean_cid_font(tmp_path: Path):
 
 
 def test_unsupported_and_missing(tmp_path: Path):
-    bad = tmp_path / "사진.png"
-    bad.write_bytes(b"x")
+    bad = tmp_path / "설치.exe"
+    bad.write_bytes(b"MZ")
     assert not convert_file(bad).ok
+    broken = tmp_path / "깨진.png"
+    broken.write_bytes(b"\x89PNG\r\n\x1a\n")
+    assert not convert_file(broken).ok
     r = convert_file(tmp_path / "없음.docx")
     assert not r.ok and "찾을 수 없" in r.message
 

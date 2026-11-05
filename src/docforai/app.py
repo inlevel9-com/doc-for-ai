@@ -11,7 +11,18 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import APP_NAME, __version__
-from .engine import FORMAT_LABEL, OUTPUT_DIR_NAME, SUPPORTED, ConvertOptions, ConvertResult, convert_many, iter_documents
+from .engine import (
+    AUDIO_FORMATS,
+    FORMAT_LABEL,
+    IMAGE_FORMATS,
+    OUTPUT_DIR_NAME,
+    SUPPORTED,
+    ConvertOptions,
+    ConvertResult,
+    convert_many,
+    excel_from_json_many,
+    iter_documents,
+)
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -24,8 +35,13 @@ FILETYPES = [
     ("한글 문서", "*.hwp *.hwpx *.hwt *.hml"),
     ("워드/파워포인트/엑셀", "*.docx *.doc *.pptx *.ppt *.xlsx *.xls"),
     ("PDF", "*.pdf"),
+    ("텍스트·웹·전자책", "*.txt *.md *.csv *.html *.htm *.json *.xml *.epub"),
+    ("압축 파일", "*.zip"),
+    ("그림(메타데이터만)", " ".join(f"*.{e}" for e in sorted(IMAGE_FORMATS))),
+    ("소리(메타데이터만)", " ".join(f"*.{e}" for e in sorted(AUDIO_FORMATS))),
     ("모든 파일", "*.*"),
 ]
+JSON_FILETYPES = [("변환결과 JSON", "*.json"), ("모든 파일", "*.*")]
 
 
 class App:
@@ -70,7 +86,7 @@ class App:
         drop.pack(fill="x", padx=14, pady=4)
         drop.pack_propagate(False)
         hint = "여기에 파일이나 폴더를 끌어다 놓으세요" if self.has_dnd else "아래 버튼으로 파일이나 폴더를 고르세요"
-        self.drop_label = ttk.Label(drop, text=f"{hint}\n(한글 HWP·HWPX, 워드, 파워포인트, 엑셀, PDF)", style="Drop.TLabel", anchor="center", justify="center")
+        self.drop_label = ttk.Label(drop, text=f"{hint}\n(한글 HWP·HWPX, 워드, 파워포인트, 엑셀, PDF, 텍스트·웹·전자책, ZIP, 그림·소리 정보)", style="Drop.TLabel", anchor="center", justify="center")
         self.drop_label.pack(expand=True, fill="both")
         if self.has_dnd:
             for w in (drop, self.drop_label):
@@ -112,6 +128,8 @@ class App:
         self.btn_go.pack(side="left")
         self.btn_open = ttk.Button(act, text="결과 폴더 열기", command=self._open_out, state="disabled")
         self.btn_open.pack(side="left", padx=8)
+        self.btn_excel = ttk.Button(act, text="JSON → 엑셀로 되돌리기…", command=self._json_to_excel)
+        self.btn_excel.pack(side="left")
         self.progress = ttk.Progressbar(act, mode="determinate")
         self.progress.pack(side="left", fill="x", expand=True, padx=8)
 
@@ -261,6 +279,37 @@ class App:
         if fail == 0 and ok:
             if messagebox.askyesno("변환 완료", f"{ok}개 문서를 변환했습니다.\n결과 폴더를 열까요?"):
                 self._open_out()
+
+    # ---------- 역변환: JSON → 엑셀 ----------
+    def _json_to_excel(self) -> None:
+        if self.worker and self.worker.is_alive():
+            return
+        sel = filedialog.askopenfilenames(title="엑셀로 되돌릴 JSON 선택 (변환결과 폴더의 .json)", filetypes=JSON_FILETYPES)
+        if not sel:
+            return
+        out_dir = None
+        if self.v_outmode.get() == "custom" and self.v_outdir.get().strip():
+            out_dir = Path(self.v_outdir.get().strip())
+        results = excel_from_json_many([Path(p) for p in sel], ConvertOptions(out_dir=out_dir))
+        ok = [r for r in results if r.ok]
+        fail = [r for r in results if not r.ok]
+        for r in ok:
+            for o in r.outputs:
+                if o.parent not in self.last_out_dirs:
+                    self.last_out_dirs.insert(0, o.parent)
+        if self.last_out_dirs:
+            self.btn_open.config(state="normal")
+        lines = [f"엑셀로 만든 파일: {len(ok)}개"] + [f"  {r.outputs[0]}" for r in ok]
+        if fail:
+            lines += ["", f"실패: {len(fail)}개"] + [f"  {r.source.name}: {r.message}" for r in fail]
+        warns = [w for r in ok for w in r.warnings]
+        if warns:
+            lines += ["", "참고:"] + [f"  {w}" for w in warns[:5]]
+        self.status.config(text=f"JSON → 엑셀 완료 · 성공 {len(ok)}개" + (f", 실패 {len(fail)}개" if fail else ""))
+        if fail and not ok:
+            messagebox.showerror("JSON → 엑셀", "\n".join(lines))
+        elif messagebox.askyesno("JSON → 엑셀", "\n".join(lines) + "\n\n결과 폴더를 열까요?"):
+            self._open_out()
 
     def _show_detail(self, _evt=None) -> None:  # noqa: ANN001
         sel = self.tree.selection()
